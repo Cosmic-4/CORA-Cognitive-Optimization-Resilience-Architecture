@@ -97,33 +97,22 @@ export const ResilienceLabView = ({ onInjectChaos }: ResilienceLabProps) => {
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn mt-14 md:mt-14">
-      {/* Header */}
-      <div className="pb-4 border-b border-[var(--color-border-subtle)]">
-        <h2 className="text-lg font-semibold text-[var(--color-text-primary)] tracking-tight">Resilience Lab</h2>
-        <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 font-mono">Inject chaos to test whether your collector structures can survive.</p>
+    <div className="mx-auto w-full max-w-[1160px] space-y-8 animate-fadeIn">
+      <div className="pb-6" style={{ borderBottom: '0.5px solid var(--color-border-subtle)' }}>
+        <h2 className="text-[28px] md:text-[30px] font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">Resilience Lab</h2>
+        <p className="text-[14px] leading-relaxed mt-1.5" style={{ color: 'var(--color-text-secondary)' }}>Inject chaos to test whether your collector structures can survive — Apple-grade verification.</p>
       </div>
 
-      {/* Central score - the visual climax */}
-      <div className="py-10 flex flex-col items-center">
-        <span className="text-[9px] font-mono text-[var(--color-text-muted)] uppercase tracking-[0.2em] font-medium">Resilience</span>
-        <div className={`mt-6 liquid-instrument ${isRunning ? 'liquid-instrument-running' : testComplete ? 'liquid-instrument-complete' : ''}`}>
+      <div className="py-8 flex flex-col items-center">
+        <span className="text-[11px] font-semibold tracking-[0.16em] uppercase" style={{ color: 'var(--color-text-muted)' }}>Resilience Score</span>
+        <div className={`mt-5 liquid-instrument ${isRunning ? 'liquid-instrument-running' : testComplete ? 'liquid-instrument-complete' : ''}`} style={{ width: 240, height: 240 }}>
           <div className="text-center">
-            <span className="hero-number" style={{ color: 'var(--color-cora)', fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>{result ? result.score : 95.8}</span>
-            <div className="text-[8px] font-mono text-[var(--color-text-muted)] uppercase tracking-[0.15em] mt-1">/ 100</div>
+            <span className="hero-number" style={{ color: 'var(--color-cora)', fontSize: '3.5rem', fontWeight: 700, letterSpacing: '-0.04em' }}>{result ? result.score : 95.8}</span>
+            <div className="text-[12px] font-medium tracking-wide mt-1" style={{ color: 'var(--color-text-muted)' }}>/ 100</div>
           </div>
         </div>
-        <div className="mt-4 text-[10px] font-mono text-[var(--color-text-muted)]">
-          {result ? `${result.survived + result.healed} / ${result.total}` : '19 / 20'} mutations survived
-        </div>
-        <div className="mt-4">
-          <button
-            onClick={() => setScoreExpanded(!scoreExpanded)}
-            className="text-[9px] font-mono text-[var(--color-text-muted)] hover:text-[var(--color-cora)] transition-colors"
-          >
-            {scoreExpanded ? 'Hide breakdown' : 'View breakdown'}
-          </button>
-        </div>
+        <div className="mt-4 text-[13px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>{result ? `${result.survived + result.healed} / ${result.total}` : '19 / 20'} mutations survived</div>
+        <button onClick={() => setScoreExpanded(!scoreExpanded)} className="mt-3 text-[13px] font-medium hover:opacity-80 transition-opacity" style={{ color: 'var(--color-cora)' }}>{scoreExpanded ? 'Hide breakdown ↑' : 'View breakdown →'}</button>
       </div>
 
       {/* Diagnostic breakdown */}

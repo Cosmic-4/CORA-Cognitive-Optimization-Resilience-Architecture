@@ -16,6 +16,8 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.33.0",
     "motion": "^13.1.1",
     "react": "^19.0.1",

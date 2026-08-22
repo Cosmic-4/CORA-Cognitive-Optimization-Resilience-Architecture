@@ -246,7 +246,7 @@ function AppInner() {
           recordCount={recordCount}
         />
 
-      <main className="w-full min-h-screen px-4 pt-14 pb-6 md:ml-[200px] md:w-[calc(100%-200px)] md:px-8 md:pt-11 md:pb-8">
+      <main className="w-full min-h-screen px-5 pt-[68px] pb-8 md:ml-[248px] md:w-[calc(100%-248px)] md:px-10 md:pt-[76px] md:pb-10" style={{ background: 'var(--color-bg-primary)' }}>
         {activeTab === 'dashboard' && (
           <DashboardView
             metrics={metrics}

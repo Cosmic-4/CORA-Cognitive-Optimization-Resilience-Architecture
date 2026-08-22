@@ -698,11 +698,24 @@ async function startServer() {
     res.json(c);
   });
   app.post("/api/collectors", (req, res) => {
-    const { mission_id, name, target_domain, bright_data_collector_id } = req.body;
+    const { mission_id, name, target_domain, bright_data_collector_id, active_selector } = req.body;
     const id = `collector_${uuidv4().slice(0, 8)}`;
     db.prepare("INSERT INTO collectors (id, mission_id, name, target_domain, bright_data_collector_id, active_selector) VALUES (?, ?, ?, ?, ?, ?)")
-      .run(id, mission_id || "default", name, target_domain || "", bright_data_collector_id || "", ".product-card .price");
+      .run(id, mission_id || "default", name, target_domain || "", bright_data_collector_id || "", active_selector || ".product-card .price");
     res.json(db.prepare("SELECT * FROM collectors WHERE id = ?").get(id));
+  });
+  app.patch("/api/collectors/:id", (req, res) => {
+    const { name, target_domain, active_selector, bright_data_collector_id, active } = req.body;
+    const existing = db.prepare("SELECT * FROM collectors WHERE id = ?").get(req.params.id) as any;
+    if (!existing) return res.status(404).json({ error: "Collector not found" });
+    db.prepare("UPDATE collectors SET name = ?, target_domain = ?, active_selector = ?, bright_data_collector_id = ?, active = ? WHERE id = ?")
+      .run(name ?? existing.name, target_domain ?? existing.target_domain, active_selector ?? existing.active_selector, bright_data_collector_id ?? existing.bright_data_collector_id, active !== undefined ? (active ? 1 : 0) : existing.active, req.params.id);
+    res.json(db.prepare("SELECT * FROM collectors WHERE id = ?").get(req.params.id));
+  });
+  app.delete("/api/collectors/:id", (req, res) => {
+    const r = db.prepare("DELETE FROM collectors WHERE id = ?").run(req.params.id);
+    if (r.changes === 0) return res.status(404).json({ error: "Not found" });
+    res.json({ deleted: true });
   });
 
   // Missions CRUD

@@ -109,8 +109,11 @@ export const apiClient = {
   getHealth: () => api<{ status: string; service: string; version: string; mock_mode: boolean; bd_configured: boolean; gemini_configured: boolean; timestamp: string }>('/api/health'),
   getMetrics: () => api<any>('/api/metrics'),
   getCollectors: () => api<ApiCollector[]>('/api/collectors'),
-  createCollector: (data: { mission_id: string; name: string; target_domain: string; bright_data_collector_id?: string }) =>
+  createCollector: (data: { mission_id?: string; name: string; target_domain: string; bright_data_collector_id?: string; active_selector?: string }) =>
     api<ApiCollector>('/api/collectors', { method: 'POST', body: JSON.stringify(data) }),
+  updateCollector: (id: string, data: { name?: string; target_domain?: string; active_selector?: string; bright_data_collector_id?: string; active?: boolean }) =>
+    api<ApiCollector>(`/api/collectors/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteCollector: (id: string) => api<{ deleted: boolean }>(`/api/collectors/${id}`, { method: 'DELETE' }),
   runCollector: (id: string) => api<ApiRunResult>(`/api/collectors/${id}/run`, { method: 'POST', body: '{}' }),
   runDemoPipeline: () => api<any>('/api/demo/pipeline', { method: 'POST', body: '{}' }),
   promoteMutation: (id: string) => api<any>(`/api/mutations/${id}/promote`, { method: 'POST', body: '{}' }),
