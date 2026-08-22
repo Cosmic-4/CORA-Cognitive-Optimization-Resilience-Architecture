@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect, useRef } from 'react';
 import { CollectorNode } from '../types';
 import { apiClient } from '../hooks';
+import { animate, stagger } from 'animejs';
 
 interface CollectorsViewProps {
   collectors: CollectorNode[];
@@ -77,6 +78,18 @@ export const CollectorsView = ({ collectors, onToggleActive, onAddCollector, onU
     }
   };
 
+  const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!listRef.current) return;
+    animate(listRef.current.querySelectorAll('.collector-card'), {
+      translateY: [12, 0],
+      opacity: [0, 1],
+      duration: 400,
+      delay: stagger(60),
+      ease: 'outExpo',
+    });
+  }, [filtered.length]);
+
   const statusStyle = (s: string) => {
     if (s === 'HEALTHY') return { color: 'var(--color-success)', bg: 'var(--color-success-muted)' };
     if (s === 'MUTATING') return { color: 'var(--color-warning)', bg: 'var(--color-warning-muted)' };
@@ -109,11 +122,11 @@ export const CollectorsView = ({ collectors, onToggleActive, onAddCollector, onU
       {/* Main layout: list + detail */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* List — premium */}
-        <div className="lg:col-span-2 space-y-2 max-h-[640px] overflow-y-auto pr-1">
+        <div ref={listRef} className="lg:col-span-2 space-y-2 max-h-[640px] overflow-y-auto pr-1">
           {filtered.map((c) => {
             const sc = statusStyle(c.status);
             return (
-              <button key={c.id} onClick={() => setSelectedId(c.id)} className="w-full p-4 rounded-[16px] border text-left transition-all hover:shadow-sm" style={{
+              <button key={c.id} onClick={(e) => { animate(e.currentTarget, { scale: [1, 0.98, 1], duration: 220, ease: 'outExpo' }); setSelectedId(c.id); }} className="collector-card w-full p-4 rounded-[16px] border text-left transition-all hover:shadow-sm opacity-0" style={{
                 backgroundColor: selectedId === c.id ? 'var(--color-bg-elevated)' : 'var(--color-bg-secondary)',
                 borderColor: selectedId === c.id ? 'var(--color-text-primary)' : 'var(--color-border-subtle)',
                 boxShadow: selectedId === c.id ? '0 2px 12px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.04)' : 'none',

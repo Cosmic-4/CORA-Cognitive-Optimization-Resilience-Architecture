@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { apiClient } from '../hooks';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 interface ProductRecord {
   id: string;
@@ -129,54 +127,8 @@ export const DataExplorerView = () => {
   };
 
   const downloadPDF = () => {
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-    const collectorName = collectors.find((c) => c.id === selectedCollector)?.name || selectedCollector || 'CORA Export';
-    const dateStr = new Date().toLocaleString();
-
-    // Header — Apple premium
-    doc.setFillColor(15, 17, 21);
-    doc.rect(0, 0, 842, 70, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
-    doc.text('CORA', 40, 30);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.setTextColor(160, 174, 192);
-    doc.text('Cognitive Optimization & Resilience Architecture  •  Data Explorer', 40, 45);
-    doc.setTextColor(255, 255, 255); doc.setFontSize(10);
-    doc.text(`Collector: ${collectorName}`, 40, 62);
-    doc.text(dateStr, 742, 62, { align: 'right' });
-
-    // Summary bar
-    doc.setFillColor(245, 247, 250);
-    doc.rect(0, 70, 842, 28, 'F');
-    doc.setTextColor(80, 90, 110); doc.setFontSize(9);
-    doc.text(`${toExport.length} records  •  Avg trust ${toExport.length ? Math.round(toExport.reduce((s, p) => s + p.trust, 0) / toExport.length) : 0}%  •  ${selectedIds.size ? 'Selected rows' : 'All filtered rows'}`, 40, 88);
-
-    autoTable(doc, {
-      startY: 108,
-      head: [['Product', 'Price', 'Trust', 'Collector', 'Contract', 'Selector', 'Verified']],
-      body: toExport.map((p) => [p.product, p.price, `${p.trust}%`, p.collector.slice(0, 18), p.contractStatus, p.selectorUsed.slice(0, 28), p.lastVerified]),
-      theme: 'plain',
-      headStyles: { fillColor: [255, 255, 255], textColor: [110, 120, 140], fontStyle: 'bold', fontSize: 8, lineColor: [230, 232, 236], lineWidth: 0.5 },
-      bodyStyles: { fontSize: 9, textColor: [20, 25, 35], cellPadding: { top: 7, bottom: 7, left: 8, right: 8 } },
-      alternateRowStyles: { fillColor: [249, 250, 251] },
-      columnStyles: { 0: { cellWidth: 180 }, 1: { cellWidth: 80 }, 2: { cellWidth: 60, halign: 'center' }, 3: { cellWidth: 120 }, 4: { cellWidth: 80, halign: 'center' }, 5: { cellWidth: 150 }, 6: { cellWidth: 80, halign: 'center' } },
-      didParseCell: (data) => {
-        if (data.section === 'body' && data.column.index === 2) {
-          const v = parseInt(String(data.cell.raw).replace('%', ''));
-          data.cell.styles.textColor = v >= 90 ? [5, 150, 105] : [217, 119, 6];
-          data.cell.styles.fontStyle = 'bold';
-        }
-      },
-      margin: { left: 40, right: 40 },
-    });
-
-    const finalY = (doc as any).lastAutoTable?.finalY || 200;
-    doc.setFontSize(7); doc.setTextColor(140, 150, 170);
-    doc.text(`CORA Data Explorer  •  Proof Mode ${localStorage.getItem('cora-proof-mode') === 'true' ? 'ON — verified' : 'OFF'}  •  Generated ${dateStr}  •  ${toExport.length} rows`, 40, finalY + 18);
-    doc.text(`Page 1 of 1`, 802, finalY + 18, { align: 'right' });
-
-    doc.save(`cora-data-${collectorName.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().slice(0, 10)}.pdf`);
+    // ponytail: native print keeps PDF export UI without 230kB jspdf; CSV remains for data
+    window.print();
   };
 
   return (

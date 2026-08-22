@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { NavTab, SystemMetrics, Incident, CollectorNode } from './types';
 import { useTheme, apiClient, authClient, mapCollector, useWebSocket, type CoraEvent } from './hooks';
+import { animate } from 'animejs';
 import { Navigation } from './components/Navigation';
 import { DashboardView } from './components/DashboardView';
 import { CollectorsView } from './components/CollectorsView';
@@ -39,6 +40,7 @@ function AppInner() {
   const [authChecked, setAuthChecked] = useState(false);
   const [pipelineActive, setPipelineActive] = useState(false);
   const [pipelineStage, setPipelineStage] = useState<'mutation' | 'adapting' | 'recovering'>('mutation');
+  const mainRef = useRef<HTMLElement>(null);
 
   // Check existing session on mount
   useEffect(() => {
@@ -144,6 +146,12 @@ function AppInner() {
 
   useWebSocket(handleWsEvent);
 
+  // anime: page transition on tab change
+  useEffect(() => {
+    if (!mainRef.current) return;
+    animate(mainRef.current, { opacity: [0, 1], translateY: [10, 0], duration: 380, ease: 'outExpo' });
+  }, [activeTab]);
+
   const handleMutateWeb = useCallback(async () => {
     setPipelineActive(true);
     setPipelineStage('mutation');
@@ -246,7 +254,7 @@ function AppInner() {
           recordCount={recordCount}
         />
 
-      <main className="w-full min-h-screen px-5 pt-[68px] pb-8 md:ml-[248px] md:w-[calc(100%-248px)] md:px-10 md:pt-[76px] md:pb-10" style={{ background: 'var(--color-bg-primary)' }}>
+      <main ref={mainRef} className="w-full min-h-screen px-5 pt-[68px] pb-8 md:ml-[248px] md:w-[calc(100%-248px)] md:px-10 md:pt-[76px] md:pb-10" style={{ background: 'var(--color-bg-primary)' }}>
         {activeTab === 'dashboard' && (
           <DashboardView
             metrics={metrics}

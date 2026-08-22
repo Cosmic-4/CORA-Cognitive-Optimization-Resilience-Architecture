@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavTab } from '../types';
 import { NotificationBell } from './NotificationBell';
+import { animate, stagger } from 'animejs';
 
 interface NavigationProps {
   activeTab: NavTab;
@@ -49,6 +50,24 @@ export const Navigation = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const bdConnected = bdMode === 'live';
   const categories = ['COMMAND', 'OPERATIONS', 'RESILIENCE', 'INTELLIGENCE'];
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!navRef.current) return;
+    animate(navRef.current.querySelectorAll('.nav-anim'), {
+      translateX: [-8, 0],
+      opacity: [0, 1],
+      duration: 420,
+      delay: stagger(45, { start: 120 }),
+      ease: 'outExpo',
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!navRef.current) return;
+    const active = navRef.current.querySelector(`[data-tab="${activeTab}"]`);
+    if (active) animate(active, { scale: [0.96, 1], duration: 260, ease: 'outBack' });
+  }, [activeTab]);
 
   return (
     <>
@@ -89,9 +108,9 @@ export const Navigation = ({
       )}
 
       {/* Desktop sidebar — Linear/Apple: 248px, ultra-clean */}
-      <nav className="hidden md:flex flex-col h-screen fixed left-0 top-0 w-[248px] z-50"
+      <nav ref={navRef} className="hidden md:flex flex-col h-screen fixed left-0 top-0 w-[248px] z-50"
         style={{ background: 'var(--color-bg-base)', borderRight: '0.5px solid var(--color-border-subtle)' }}>
-        <div className="flex items-center gap-3 px-6 pt-7 pb-6">
+        <div className="nav-anim flex items-center gap-3 px-6 pt-7 pb-6">
           <CoraLogo size={30} />
           <div>
             <h1 className="text-[16px] font-semibold tracking-[-0.02em] text-[var(--color-text-primary)] leading-none">CORA</h1>
@@ -102,15 +121,17 @@ export const Navigation = ({
         <div className="flex-1 overflow-y-auto px-3 py-2">
           {categories.map((category) => (
             <div key={category} className="mb-6">
-              <div className="px-3 pb-2 text-[11px] font-semibold tracking-[0.12em] text-[var(--color-text-muted)] uppercase">{category}</div>
+              <div className="nav-anim px-3 pb-2 text-[11px] font-semibold tracking-[0.12em] text-[var(--color-text-muted)] uppercase">{category}</div>
               {navItems.filter((item) => item.category === category).map((item) => {
                 const isActive = activeTab === item.id;
                 return (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all text-left ${isActive ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-base)] shadow-sm' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]'}`}>
+                  <button key={item.id} data-tab={item.id} onClick={() => setActiveTab(item.id)}
+                    onMouseEnter={(e) => animate(e.currentTarget, { translateX: 3, duration: 160, ease: 'outQuad' })}
+                    onMouseLeave={(e) => animate(e.currentTarget, { translateX: 0, duration: 160, ease: 'outQuad' })}
+                    className={`nav-anim w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all text-left ${isActive ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-base)] shadow-sm' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]'}`}>
                     <span className={`material-symbols-outlined text-[18px] ${isActive ? 'opacity-90' : 'opacity-60'}`}>{item.icon}</span>
                     <span className="flex-1">{item.label}</span>
-                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-cora)]" />}
+                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-cora)] animate-pulse" />}
                   </button>
                 );
               })}

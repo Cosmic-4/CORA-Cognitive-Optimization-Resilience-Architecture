@@ -4,7 +4,6 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { createServer as createHttpServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
-import { v4 as uuidv4 } from "uuid";
 import Database from "better-sqlite3";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -281,7 +280,7 @@ function recordMemory(mutType: string, field: string, oldStrat: string, newStrat
       .run(occ, (existing.success_rate * existing.occurrence_count + (success ? 1 : 0)) / occ, (existing.average_confidence * existing.occurrence_count + conf) / occ, sig);
   } else {
     db.prepare("INSERT INTO memory (id, mutation_type, field, pattern_signature, repair_strategy, success_rate, occurrence_count, average_confidence) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-      .run(`mem_${uuidv4().slice(0, 8)}`, mutType, field, sig, newStrat, success ? 1 : 0, 1, conf);
+      .run(`mem_${crypto.randomUUID().slice(0,8)}`, mutType, field, sig, newStrat, success ? 1 : 0, 1, conf);
   }
 }
 
@@ -346,11 +345,11 @@ function generateSignals(collectorName: string, collectorId: string, currentReco
           const changeStr = `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`;
           const fmt = (v: number) => v >= 1000 ? `$${v.toLocaleString()}` : `$${v}`;
           db.prepare("INSERT INTO signals (id, time, field, change, old_val, new_val, collector, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-            .run(`sig_${uuidv4().slice(0, 8)}`, timeStr, `${cur.product_name || field} (${field})`, changeStr, fmt(prevVal), fmt(curVal), collectorName, "price");
+            .run(`sig_${crypto.randomUUID().slice(0,8)}`, timeStr, `${cur.product_name || field} (${field})`, changeStr, fmt(prevVal), fmt(curVal), collectorName, "price");
         }
       } else if (typeof curVal === "string" && typeof prevVal === "string" && curVal !== prevVal) {
         db.prepare("INSERT INTO signals (id, time, field, change, old_val, new_val, collector, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-          .run(`sig_${uuidv4().slice(0, 8)}`, timeStr, `${cur.product_name || field} (${field})`, curVal === "In Stock" ? "RESTOCK" : "OUT", prevVal, curVal, collectorName, "availability");
+          .run(`sig_${crypto.randomUUID().slice(0,8)}`, timeStr, `${cur.product_name || field} (${field})`, curVal === "In Stock" ? "RESTOCK" : "OUT", prevVal, curVal, collectorName, "availability");
       }
     }
   }
@@ -362,34 +361,18 @@ type MutType = typeof ALL_MUTATION_TYPES[number];
 const STRUCTURAL: MutType[] = ["CSS_OBFUSCATION", "DOM_RESTRUCTURE", "ATTRIBUTE_SHIFT", "ELEMENT_RELOCATION"];
 const SEMANTIC: MutType[] = ["LOCALIZATION_CHANGE", "PROMO_INJECTION"];
 
-const KEY_MAP: Record<string, string> = { product_name: "p_nm", current_price: "p_pr", availability: "p_av", rating: "p_rt" };
-const KEY_MAP_REV = Object.fromEntries(Object.entries(KEY_MAP).map(([k, v]) => [v, k]));
-
-function applyMutation(type: MutType, records: Record<string, any>[]): Record<string, any>[] {
-  return records.map((rec) => {
-    switch (type) {
-      case "CSS_OBFUSCATION": return Object.fromEntries(Object.entries(rec).map(([k, v]) => [KEY_MAP[k] || k, v]));
-      case "DOM_RESTRUCTURE": return { wrapper: { ...rec } };
-      case "ATTRIBUTE_SHIFT": { const { current_price, ...rest } = rec; return { ...rest, price_value: current_price }; }
-      case "LOCALIZATION_CHANGE": return { ...rec, current_price: `₹${Number(rec.current_price).toLocaleString("en-IN")}` };
-      case "PROMO_INJECTION": return { ...rec, product_name: `🔥 LIMITED ${rec.product_name}` };
-      case "ELEMENT_RELOCATION": { const { current_price, ...rest } = rec; return { ...rest, pricing: { current_price } }; }
-    }
-  });
-}
-
-function repairMutation(type: MutType, records: Record<string, any>[]): Record<string, any>[] {
-  return records.map((rec) => {
-    switch (type) {
-      case "CSS_OBFUSCATION": return Object.fromEntries(Object.entries(rec).map(([k, v]) => [KEY_MAP_REV[k] || k, v]));
-      case "DOM_RESTRUCTURE": return (rec as any).wrapper ? { ...(rec as any).wrapper } : rec;
-      case "ATTRIBUTE_SHIFT": { const { price_value, ...rest } = rec; return { ...rest, current_price: price_value }; }
-      case "LOCALIZATION_CHANGE": return { ...rec, current_price: Number(String(rec.current_price).replace(/[^\d.]/g, "")) };
-      case "PROMO_INJECTION": return { ...rec, product_name: String(rec.product_name).replace(/^🔥 LIMITED /, "") };
-      case "ELEMENT_RELOCATION": { const { pricing, ...rest } = rec; return { ...rest, current_price: (pricing as any)?.current_price }; }
-    }
-  });
-}
+const KM: Record<string,string> = { product_name:"p_nm", current_price:"p_pr", availability:"p_av", rating:"p_rt" };
+const KR = Object.fromEntries(Object.entries(KM).map(([k,v])=>[v,k]));
+const MUT: Record<MutType, [(r:any)=>any,(r:any)=>any]> = {
+  CSS_OBFUSCATION: [r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[KM[k]||k,v])), r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[KR[k]||k,v]))],
+  DOM_RESTRUCTURE: [r=>({wrapper:{...r}}), r=>(r as any).wrapper?{...(r as any).wrapper}:r],
+  ATTRIBUTE_SHIFT: [r=>{const{current_price,...o}=r;return{...o,price_value:current_price}}, r=>{const{price_value,...o}=r;return{...o,current_price:price_value}}],
+  LOCALIZATION_CHANGE: [r=>({...r,current_price:`₹${Number(r.current_price).toLocaleString("en-IN")}`}), r=>({...r,current_price:Number(String(r.current_price).replace(/[^\d.]/g,""))})],
+  PROMO_INJECTION: [r=>({...r,product_name:`🔥 LIMITED ${r.product_name}`}), r=>({...r,product_name:String(r.product_name).replace(/^🔥 LIMITED /,"")})],
+  ELEMENT_RELOCATION: [r=>{const{current_price,...o}=r;return{...o,pricing:{current_price}}}, r=>{const{pricing,...o}=r;return{...o,current_price:(pricing as any)?.current_price}}],
+};
+const applyMutation = (t:MutType, recs:Record<string,any>[]) => recs.map(MUT[t][0]);
+const repairMutation = (t:MutType, recs:Record<string,any>[]) => recs.map(MUT[t][1]);
 
 function runResilience(baseline: Record<string, any>[], types?: string[]) {
   const active = types && types.length > 0
@@ -494,14 +477,14 @@ function seedDemoData() {
   if (count("collectors") === 0) for (const c of demoCollectors) {
     db.prepare("INSERT INTO collectors (id, mission_id, name, target_domain, active_selector) VALUES (?, 'mission_demo', ?, ?, ?)")
       .run(c.id, c.name, c.domain, c.selector);
-    const runId = `run_${uuidv4().slice(0, 8)}`;
+    const runId = `run_${crypto.randomUUID().slice(0,8)}`;
     db.prepare("INSERT INTO collector_runs (id, collector_id, status, record_count) VALUES (?, ?, 'completed', ?)")
       .run(runId, c.id, mockData().length);
     for (const rec of mockData()) {
       const contract = getContractForCollector(c.id);
       const validation = validateContract(contract, rec);
       db.prepare("INSERT INTO records (id, collector_run_id, data_json, validation_status, confidence) VALUES (?, ?, ?, ?, ?)")
-        .run(`rec_${uuidv4().slice(0, 8)}`, runId, JSON.stringify(rec), validation.valid ? "valid" : "invalid", validation.confidence);
+        .run(`rec_${crypto.randomUUID().slice(0,8)}`, runId, JSON.stringify(rec), validation.valid ? "valid" : "invalid", validation.confidence);
       persistHistValues(c.id, rec);
     }
   }
@@ -514,7 +497,7 @@ function seedDemoData() {
     ];
     for (const m of demoMissions) {
       db.prepare("INSERT INTO missions (id, name, status, records, health, repairs, purpose, target, collector, fields, resilience) VALUES (?, ?, 'ACTIVE', ?, ?, ?, ?, ?, ?, ?, ?)")
-        .run(`mission_${uuidv4().slice(0, 8)}`, m.name, m.records, m.health, m.repairs, m.purpose, m.target, m.collector, JSON.stringify(m.fields), m.resilience);
+        .run(`mission_${crypto.randomUUID().slice(0,8)}`, m.name, m.records, m.health, m.repairs, m.purpose, m.target, m.collector, JSON.stringify(m.fields), m.resilience);
     }
   }
 
@@ -540,7 +523,7 @@ function seedDemoData() {
     ];
     for (const m of demoMutations) {
       db.prepare(`INSERT INTO mutations (id, collector_name, type, field, status, current_selector, proposed_selector, before_dom, after_dom, mutation_path, records_tested, contract_passed, coverage, confidence, version_before, version_after) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(`mut_${uuidv4().slice(0, 8)}`, m.collector, m.type, m.field, m.status, m.current, m.proposed,
+        .run(`mut_${crypto.randomUUID().slice(0,8)}`, m.collector, m.type, m.field, m.status, m.current, m.proposed,
           `<div class="product-card">\n  <span class="price">$1,499.00</span>\n</div>`,
           `<div class="product-card-v2">\n  <div class="pricing">\n    <span data-current-price="1499.00">$1,499.00 USD</span>\n  </div>\n</div>`,
           JSON.stringify([m.type, "SELECTOR DRIFTED", "REPAIR PROMOTED"]), 12482, 12471, m.cov, m.conf, m.vb, m.va);
@@ -559,7 +542,7 @@ function seedDemoData() {
     ];
     for (const s of demoSignals) {
       db.prepare("INSERT INTO signals (id, time, field, change, old_val, new_val, collector, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-        .run(`sig_${uuidv4().slice(0, 8)}`, s.time, s.field, s.change, s.old, s.new, s.collector, s.type);
+        .run(`sig_${crypto.randomUUID().slice(0,8)}`, s.time, s.field, s.change, s.old, s.new, s.collector, s.type);
     }
   }
 }
@@ -572,7 +555,7 @@ async function runRepairPipeline(collector: any, records: Record<string, any>[],
 
   if (anomalies.length > 0) {
     const anomaly = anomalies[0];
-    const mutId = `mut_${uuidv4().slice(0, 8)}`;
+    const mutId = `mut_${crypto.randomUUID().slice(0,8)}`;
     emitEvent("anomaly.detected", { collector_id: collector.id, data: { type: anomaly.type, field: anomaly.field } });
     emitEvent("repair.started", { collector_id: collector.id, mutation_id: mutId });
 
@@ -589,7 +572,7 @@ async function runRepairPipeline(collector: any, records: Record<string, any>[],
         shadow = { candidate_id: cand.id, coverage: 0.97, contract_compliance: 0.97, confidence: cand.confidence, passed: true };
       }
       emitEvent("shadow.completed", { collector_id: collector.id, mutation_id: mutId, data: { passed: shadow.passed, coverage: shadow.coverage } });
-      const repairId = `repair_${uuidv4().slice(0, 8)}`;
+      const repairId = `repair_${crypto.randomUUID().slice(0,8)}`;
 
       if (shadow.passed) {
         db.prepare("UPDATE collectors SET active_selector = ?, status = 'HEALTHY', health_score = 100 WHERE id = ?").run(cand.new_selector, collector.id);
@@ -597,7 +580,7 @@ async function runRepairPipeline(collector: any, records: Record<string, any>[],
         const recoveryStart = Date.now();
         recordMemory(anomaly.type, anomaly.field || "unknown", cand.old_selector, cand.new_selector, cand.confidence, true);
         db.prepare(`INSERT INTO mutations (id, collector_id, collector_name, run_id, type, field, status, current_selector, proposed_selector, before_dom, after_dom, mutation_path, records_tested, contract_passed, coverage, confidence, version_before, version_after) VALUES (?, ?, ?, ?, ?, ?, 'REPAIRED', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'v1.0', 'v1.1')`)
-          .run(`mut_${uuidv4().slice(0, 8)}`, collector.id, collector.name, runId, anomaly.type, anomaly.field || "unknown",
+          .run(`mut_${crypto.randomUUID().slice(0,8)}`, collector.id, collector.name, runId, anomaly.type, anomaly.field || "unknown",
             cand.old_selector, cand.new_selector,
             `<div class="product-card">\n  <span class="price">$1,499.00</span>\n</div>`,
             `<div class="product-card-v2">\n  <span class="${cand.new_selector.replace(/[^\w-]/g, "")}">$1,499.00</span>\n</div>`,
@@ -625,7 +608,21 @@ async function startServer() {
 
   const app = express();
   const PORT = 3000;
+  // CORS — allow vite dev on :5173 and same-origin
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+  });
   app.use(express.json());
+  // Return JSON for malformed JSON bodies instead of HTML stacktrace
+  app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err instanceof SyntaxError && (err as any).status === 400 && 'body' in err) return res.status(400).json({ error: 'Invalid JSON' });
+    next(err);
+  });
 
   // Health
   app.get("/api/health", (_req, res) => {
@@ -638,19 +635,24 @@ async function startServer() {
 
   // ─── Auth ────────────────────────────────────────────────────────────
   app.post("/api/auth/login", (req, res) => {
-    const { username, password } = req.body;
+    const rawU = req.body?.username, rawP = req.body?.password;
+    const username = typeof rawU === 'string' ? rawU.trim() : rawU;
+    const password = typeof rawP === 'string' ? rawP : rawP;
     if (!username || !password) return res.status(400).json({ error: "Username and password required" });
     const user = db.prepare("SELECT * FROM users WHERE username = ?").get(username) as any;
-    if (!user || !bcrypt.compareSync(password, user.password_hash)) return res.status(401).json({ error: "Invalid credentials" });
+    if (!user || !bcrypt.compareSync(String(password), user.password_hash)) return res.status(401).json({ error: "Invalid credentials" });
     const token = crypto.randomBytes(32).toString("hex");
     db.prepare("INSERT INTO sessions (token, user_id) VALUES (?, ?)").run(token, user.id);
     res.json({ token, user: { id: user.id, username: user.username, display_name: user.display_name, role: user.role } });
   });
   app.post("/api/auth/register", (req, res) => {
-    const { username, password, display_name } = req.body;
+    const rawU = req.body?.username, rawP = req.body?.password;
+    const username = typeof rawU === 'string' ? rawU.trim() : rawU;
+    const password = typeof rawP === 'string' ? rawP : rawP;
+    const display_name = req.body?.display_name;
     if (!username || !password) return res.status(400).json({ error: "Username and password required" });
     if (db.prepare("SELECT id FROM users WHERE username = ?").get(username)) return res.status(409).json({ error: "Username taken" });
-    const id = `user_${uuidv4().slice(0, 8)}`;
+    const id = `user_${crypto.randomUUID().slice(0,8)}`;
     const hash = bcrypt.hashSync(password, 10);
     db.prepare("INSERT INTO users (id, username, password_hash, display_name) VALUES (?, ?, ?, ?)").run(id, username, hash, display_name || username);
     const token = crypto.randomBytes(32).toString("hex");
@@ -699,7 +701,7 @@ async function startServer() {
   });
   app.post("/api/collectors", (req, res) => {
     const { mission_id, name, target_domain, bright_data_collector_id, active_selector } = req.body;
-    const id = `collector_${uuidv4().slice(0, 8)}`;
+    const id = `collector_${crypto.randomUUID().slice(0,8)}`;
     db.prepare("INSERT INTO collectors (id, mission_id, name, target_domain, bright_data_collector_id, active_selector) VALUES (?, ?, ?, ?, ?, ?)")
       .run(id, mission_id || "default", name, target_domain || "", bright_data_collector_id || "", active_selector || ".product-card .price");
     res.json(db.prepare("SELECT * FROM collectors WHERE id = ?").get(id));
@@ -725,7 +727,7 @@ async function startServer() {
   });
   app.post("/api/missions", (req, res) => {
     const { name, purpose, target, fields, collector } = req.body;
-    const id = `mission_${uuidv4().slice(0, 8)}`;
+    const id = `mission_${crypto.randomUUID().slice(0,8)}`;
     db.prepare("INSERT INTO missions (id, name, status, records, health, repairs, purpose, target, collector, fields, resilience) VALUES (?, ?, 'ACTIVE', 0, 100, 0, ?, ?, ?, ?, 100)")
       .run(id, name, purpose || "", target || "", collector || "", JSON.stringify(fields || []));
     res.json(db.prepare("SELECT * FROM missions WHERE id = ?").get(id));
@@ -782,7 +784,7 @@ async function startServer() {
   });
   app.post("/api/contracts", (req, res) => {
     const { collector_id, schema, version } = req.body;
-    const id = `contract_${uuidv4().slice(0, 8)}`;
+    const id = `contract_${crypto.randomUUID().slice(0,8)}`;
     db.prepare("INSERT INTO contracts (id, collector_id, schema_json, version, is_default) VALUES (?, ?, ?, ?, 0)")
       .run(id, collector_id || null, JSON.stringify(schema || DEFAULT_CONTRACT), version || "1.0.0");
     res.json({ id, collector_id, version, is_default: false });
@@ -887,7 +889,7 @@ async function startServer() {
     const collector = db.prepare("SELECT * FROM collectors WHERE id = ?").get(req.params.id) as any;
     if (!collector) return res.status(404).json({ error: "Collector not found" });
 
-    const runId = `run_${uuidv4().slice(0, 8)}`;
+    const runId = `run_${crypto.randomUUID().slice(0,8)}`;
     db.prepare("INSERT INTO collector_runs (id, collector_id, status) VALUES (?, ?, 'running')").run(runId, collector.id);
     emitEvent("collector.started", { collector_id: collector.id });
 
@@ -898,7 +900,7 @@ async function startServer() {
       const anomalies = detectAnomalies(collector.id, records, validation);
 
       for (const rec of records) {
-        const recId = `rec_${uuidv4().slice(0, 8)}`;
+        const recId = `rec_${crypto.randomUUID().slice(0,8)}`;
         db.prepare("INSERT INTO records (id, collector_run_id, data_json, validation_status, confidence) VALUES (?, ?, ?, ?, ?)")
           .run(recId, runId, JSON.stringify(rec), validation.valid ? "valid" : "invalid", validation.confidence);
         persistHistValues(collector.id, rec);
@@ -994,7 +996,7 @@ async function startServer() {
     const collector = db.prepare("SELECT * FROM collectors ORDER BY created_at ASC LIMIT 1").get() as any;
     if (!collector) return res.status(404).json({ error: "No collectors available" });
 
-    const runId = `run_demo_${uuidv4().slice(0, 8)}`;
+    const runId = `run_demo_${crypto.randomUUID().slice(0,8)}`;
     db.prepare("INSERT INTO collector_runs (id, collector_id, status) VALUES (?, ?, 'running')").run(runId, collector.id);
     emitEvent("collector.started", { collector_id: collector.id });
 
@@ -1009,7 +1011,7 @@ async function startServer() {
       const anomalies = detectAnomalies(collector.id, mutatedRecords, validation);
 
       for (const rec of mutatedRecords) {
-        const recId = `rec_${uuidv4().slice(0, 8)}`;
+        const recId = `rec_${crypto.randomUUID().slice(0,8)}`;
         db.prepare("INSERT INTO records (id, collector_run_id, data_json, validation_status, confidence) VALUES (?, ?, ?, ?, ?)")
           .run(recId, runId, JSON.stringify(rec), validation.valid ? "valid" : "invalid", validation.confidence);
       }
@@ -1021,12 +1023,12 @@ async function startServer() {
       // Fallback for demo: ensure promotion is visible even if shadow logic is strict
       if (!pipeline.repairInfo && anomalies.length > 0) {
         const fallbackSel = "[data-product-name]";
-        const repairId = `repair_${uuidv4().slice(0, 8)}`;
-        const mutId = `mut_${uuidv4().slice(0, 8)}`;
+        const repairId = `repair_${crypto.randomUUID().slice(0,8)}`;
+        const mutId = `mut_${crypto.randomUUID().slice(0,8)}`;
         db.prepare("UPDATE collectors SET active_selector = ?, status = 'HEALTHY', health_score = 100 WHERE id = ?").run(fallbackSel, collector.id);
         emitEvent("repair.promoted", { collector_id: collector.id, repair_id: repairId });
         db.prepare(`INSERT INTO mutations (id, collector_id, collector_name, run_id, type, field, status, current_selector, proposed_selector, before_dom, after_dom, mutation_path, records_tested, contract_passed, coverage, confidence, version_before, version_after) VALUES (?, ?, ?, ?, ?, ?, 'REPAIRED', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'v1.0', 'v1.1')`)
-          .run(`mut_${uuidv4().slice(0, 8)}`, collector.id, collector.name, runId, "CSS_OBFUSCATION", anomalies[0].field || "product_name",
+          .run(`mut_${crypto.randomUUID().slice(0,8)}`, collector.id, collector.name, runId, "CSS_OBFUSCATION", anomalies[0].field || "product_name",
             collector.active_selector || ".price", fallbackSel,
             `<div class="product-card">\n  <span class="price">$1,499.00</span>\n</div>`,
             `<div class="product-card-v2">\n  <span class="${fallbackSel.replace(/[^\w-]/g, "")}">$1,499.00</span>\n</div>`,

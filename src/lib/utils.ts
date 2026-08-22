@@ -1,6 +1,3 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+export function cn(...inputs: any[]) {
+  return inputs.flatMap((i) => typeof i === 'string' ? i : i && typeof i === 'object' ? Object.entries(i).filter(([, v]) => v).map(([k]) => k) : []).filter(Boolean).join(' ')
 }

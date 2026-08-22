@@ -25,36 +25,56 @@ export function useTheme() {
 
 const API_BASE = '';
 
-let authToken: string | null = localStorage.getItem('cora-auth-token');
+function safeGetToken(): string | null {
+  try { return typeof window !== 'undefined' ? window.localStorage.getItem('cora-auth-token') : null; } catch { return null; }
+}
+function safeSetToken(v: string | null) {
+  try {
+    if (typeof window === 'undefined') return;
+    if (v) window.localStorage.setItem('cora-auth-token', v);
+    else window.localStorage.removeItem('cora-auth-token');
+  } catch {}
+}
+
+let authToken: string | null = safeGetToken();
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-  const res = await fetch(`${API_BASE}${path}`, { headers, ...options });
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
-  return res.json();
+  // merge headers correctly if options.headers provided
+  const merged = { ...options, headers: { ...headers, ...(options?.headers as Record<string,string> | undefined) } };
+  const res = await fetch(`${API_BASE}${path}`, merged);
+  if (!res.ok) {
+    let body = '';
+    try { body = await res.text(); } catch {}
+    // try parse JSON for cleaner message
+    try { const j = JSON.parse(body); body = j.error || body; } catch {}
+    throw new Error(`API ${res.status}: ${body}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) as T : ({} as T);
 }
 
 export const authClient = {
   login: async (username: string, password: string) => {
-    const res = await api<{ token: string; user: { id: string; username: string; display_name: string; role: string } }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    const res = await api<{ token: string; user: { id: string; username: string; display_name: string; role: string } }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: username.trim(), password }) });
     authToken = res.token;
-    localStorage.setItem('cora-auth-token', res.token);
+    safeSetToken(res.token);
     return res;
   },
   register: async (username: string, password: string, display_name?: string) => {
-    const res = await api<{ token: string; user: { id: string; username: string; display_name: string; role: string } }>('/api/auth/register', { method: 'POST', body: JSON.stringify({ username, password, display_name }) });
+    const res = await api<{ token: string; user: { id: string; username: string; display_name: string; role: string } }>('/api/auth/register', { method: 'POST', body: JSON.stringify({ username: username.trim(), password, display_name }) });
     authToken = res.token;
-    localStorage.setItem('cora-auth-token', res.token);
+    safeSetToken(res.token);
     return res;
   },
   me: () => api<{ id: string; username: string; display_name: string; role: string }>('/api/auth/me'),
   logout: async () => {
     try { await api('/api/auth/logout', { method: 'POST' }); } catch {}
     authToken = null;
-    localStorage.removeItem('cora-auth-token');
+    safeSetToken(null);
   },
-  isLoggedIn: () => !!authToken,
+  isLoggedIn: () => !!authToken || !!safeGetToken(),
 };
 
 export interface ApiCollector {
