@@ -467,12 +467,15 @@ function getRecentEvents(limit = 30) {
 function seedDemoData() {
   const count = (t: string) => (db.prepare(`SELECT COUNT(*) AS c FROM ${t}`).get() as any).c as number;
 
-  // Default admin user (password: admin)
-  if (count("users") === 0) {
-    const hash = bcrypt.hashSync("admin", 10);
-    db.prepare("INSERT INTO users (id, username, password_hash, display_name, role) VALUES (?, 'admin', ?, 'CORA Admin', 'admin')")
-      .run(`user_admin`, hash);
-  }
+  // Demo accounts (idempotent — creates missing users on existing DBs too)
+  const ensureUser = (id: string, username: string, password: string, display_name: string, role: string) => {
+    if (!db.prepare("SELECT id FROM users WHERE username = ?").get(username)) {
+      const hash = bcrypt.hashSync(password, 10);
+      db.prepare("INSERT INTO users (id, username, password_hash, display_name, role) VALUES (?, ?, ?, ?, ?)").run(id, username, hash, display_name, role);
+    }
+  };
+  ensureUser("user_admin", "admin", "admin", "CORA Admin", "admin");
+  ensureUser("user_demo", "demo", "demo123", "Demo Operator", "operator");
 
   // Contracts: always seed default
   if (count("contracts") === 0) {

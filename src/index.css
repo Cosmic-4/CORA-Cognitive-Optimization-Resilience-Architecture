@@ -1761,3 +1761,57 @@
   0% { transform: scale(1); opacity: 0.6; }
   100% { transform: scale(3); opacity: 0; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MODERN ANIMATED SIGN-IN — shadcn + motion
+   Tailwind v4: variables here, config in tailwind.config.js
+   Supports both data-theme and class-based dark mode for compat
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  :root {
+    --background: hsl(0, 0%, 100%);
+    --foreground: hsl(0, 0%, 0%);
+    --skeleton: hsl(0, 0%, 90%);
+    --btn-border: hsl(214, 31.8%, 91.4%);
+    --input: hsl(220, 20%, 90%);
+    --radius: 0.5rem;
+  }
+
+  .dark, [data-theme="dark"] {
+    --background: hsl(222, 94%, 5%);
+    --foreground: hsl(0, 0%, 100%);
+    --skeleton: hsl(218, 36%, 16%);
+    --btn-border: hsl(217, 32.6%, 17.5%);
+    --input: hsl(219, 63%, 16%);
+    --radius: 0.5rem;
+  }
+}
+
+@layer components {
+  .g-button {
+    border-radius: var(--radius);
+    border: 1px solid var(--btn-border);
+  }
+}
+
+/* animations used by modern-animated-sign-in — defined here for Tailwind v4 compat */
+@keyframes ripple {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(0.9); }
+}
+@keyframes orbit {
+  0% { transform: rotate(0deg) translateY(calc(var(--radius) * 1px)) rotate(0deg); }
+  100% { transform: rotate(360deg) translateY(calc(var(--radius) * 1px)) rotate(-360deg); }
+}
+
+/* Tailwind v4 doesn't auto-generate animate-* from tailwind.config.js when using @tailwindcss/vite — provide utilities manually */
+@layer utilities {
+  .animate-ripple { animation: ripple 2s ease calc(var(--i, 0) * 0.2s) infinite; }
+  .animate-orbit { animation: orbit calc(var(--duration) * 1s) linear infinite; }
+  .bg-background { background-color: var(--background); }
+  .text-foreground { color: var(--foreground); }
+  .shadow-input {
+    box-shadow: 0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08);
+  }
+}
