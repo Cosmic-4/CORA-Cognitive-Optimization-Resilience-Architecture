@@ -22,8 +22,8 @@ export function useTheme() {
 }
 
 // ─── API Client ────────────────────────────────────────────────────────
-
-const API_BASE = '';
+// ponytail: keep 3000 as canonical backend; vite 5173 proxy fallback
+const API_BASE = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3000' : '';
 
 function safeGetToken(): string | null {
   try { return typeof window !== 'undefined' ? window.localStorage.getItem('cora-auth-token') : null; } catch { return null; }

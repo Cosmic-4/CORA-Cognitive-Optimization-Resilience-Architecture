@@ -126,7 +126,7 @@ export const CollectorsView = ({ collectors, onToggleActive, onAddCollector, onU
           {filtered.map((c) => {
             const sc = statusStyle(c.status);
             return (
-              <button key={c.id} onClick={(e) => { animate(e.currentTarget, { scale: [1, 0.98, 1], duration: 220, ease: 'outExpo' }); setSelectedId(c.id); }} className="collector-card w-full p-4 rounded-[16px] border text-left transition-all hover:shadow-sm opacity-0" style={{
+              <button key={c.id} onClick={(e) => { animate(e.currentTarget, { scale: [1, 0.98, 1], duration: 220, ease: 'outExpo' }); setSelectedId(c.id); }} className="collector-card w-full p-4 rounded-[16px] border text-left transition-all hover:shadow-sm" style={{
                 backgroundColor: selectedId === c.id ? 'var(--color-bg-elevated)' : 'var(--color-bg-secondary)',
                 borderColor: selectedId === c.id ? 'var(--color-text-primary)' : 'var(--color-border-subtle)',
                 boxShadow: selectedId === c.id ? '0 2px 12px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.04)' : 'none',

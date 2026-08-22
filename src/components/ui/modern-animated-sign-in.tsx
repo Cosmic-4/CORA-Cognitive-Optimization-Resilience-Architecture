@@ -39,7 +39,7 @@ const Input = memo(
 );
 Input.displayName = 'Input';
 
-// ==================== BoxReveal (CSS only, no motion) ====================
+// ==================== BoxReveal (passthrough, keeps API but no hide) ====================
 type BoxRevealProps = {
   children: ReactNode;
   width?: string;
@@ -49,49 +49,10 @@ type BoxRevealProps = {
   position?: string;
   className?: string;
 };
-const BoxReveal = memo(function BoxReveal({
-  children,
-  width = 'fit-content',
-  boxColor,
-  duration,
-  overflow = 'hidden',
-  position = 'relative',
-  className,
-}: BoxRevealProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const o = new IntersectionObserver(([e]) => e.isIntersecting && setVisible(true), { threshold: 0.1 });
-    o.observe(el);
-    return () => o.disconnect();
-  }, []);
+const BoxReveal = memo(function BoxReveal({ children, width, overflow = 'hidden', position = 'relative', className }: BoxRevealProps) {
   return (
-    <div
-      ref={ref as any}
-      style={{ position: position as any, width, overflow } as any}
-      className={className}
-    >
-      <div
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(12px)',
-          transition: `opacity ${duration ?? 0.5}s ease 0.25s, transform ${duration ?? 0.5}s ease 0.25s`,
-        }}
-      >
-        {children}
-      </div>
-      <div
-        style={{
-          position: 'absolute',
-          top: 4, bottom: 4, left: 0, right: 0, zIndex: 20,
-          background: boxColor ?? '#5046e6',
-          borderRadius: 4,
-          transform: visible ? 'translateX(100%)' : 'translateX(0)',
-          transition: `transform ${duration ?? 0.5}s ease-in`,
-        }}
-      />
+    <div style={{ position: position as any, width, overflow } as any} className={className}>
+      {children}
     </div>
   );
 });

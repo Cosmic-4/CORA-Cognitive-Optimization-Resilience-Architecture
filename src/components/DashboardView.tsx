@@ -90,7 +90,7 @@ export const DashboardView = ({ metrics, incidents, onOpenDeployModal, onMutateW
   return (
     <div ref={rootRef} className="mx-auto w-full max-w-[1160px] pb-10">
       {/* Header — Apple: 48px title, 15px subtitle */}
-      <div className="dash-anim pt-2 pb-8 opacity-0">
+      <div className="dash-anim pt-2 pb-8">
         <div className="flex items-baseline gap-3">
           <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">Overview</h1>
           <span className="hidden md:inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[12px] font-medium border" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-subtle)', color: statusInfo.color }}>
@@ -103,7 +103,7 @@ export const DashboardView = ({ metrics, incidents, onOpenDeployModal, onMutateW
       </div>
 
       {/* Hero */}
-      <div className="dash-anim flex justify-center py-6 opacity-0">
+      <div className="dash-anim flex justify-center py-6">
         <CoraCore
           health={metrics.systemHealth}
           systemState={coreState as SystemState}
@@ -116,7 +116,7 @@ export const DashboardView = ({ metrics, incidents, onOpenDeployModal, onMutateW
       </div>
 
       {/* Mutate action — Apple: 44px pill, generous */}
-      <div className="dash-anim flex flex-col items-center gap-5 mt-2 mb-10 opacity-0">
+      <div className="dash-anim flex flex-col items-center gap-5 mt-2 mb-10">
         <button
           onClick={(e) => {
             const b = e.currentTarget;
@@ -149,7 +149,7 @@ export const DashboardView = ({ metrics, incidents, onOpenDeployModal, onMutateW
 
       {/* Grid — Linear: 2-col incidents + resilience */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="dash-anim lg:col-span-2 rounded-[18px] p-6 opacity-0" style={{ background: 'var(--color-bg-elevated)', border: '0.5px solid var(--color-border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)' }}>
+        <div className="dash-anim lg:col-span-2 rounded-[18px] p-6" style={{ background: 'var(--color-bg-elevated)', border: '0.5px solid var(--color-border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)' }}>
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-[13px] font-semibold tracking-[0.08em] uppercase" style={{ color: 'var(--color-text-muted)' }}>Recent Incidents</h3>
             <span className="text-[12px] font-medium px-2.5 py-1 rounded-full border" style={{ background: incidents.filter(i => i.severity !== 'RESOLVED').length ? 'var(--color-warning-muted)' : 'var(--color-success-muted)', borderColor: incidents.filter(i => i.severity !== 'RESOLVED').length ? 'rgba(251,191,36,0.2)' : 'rgba(52,211,153,0.2)', color: incidents.filter(i => i.severity !== 'RESOLVED').length ? 'var(--color-warning)' : 'var(--color-success)' }}>
@@ -174,7 +174,7 @@ export const DashboardView = ({ metrics, incidents, onOpenDeployModal, onMutateW
           </div>
         </div>
 
-        <div ref={resilienceRef} className="dash-anim rounded-[18px] p-6 flex flex-col opacity-0" style={{ background: 'var(--color-bg-elevated)', border: '0.5px solid var(--color-border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)' }}>
+        <div ref={resilienceRef} className="dash-anim rounded-[18px] p-6 flex flex-col" style={{ background: 'var(--color-bg-elevated)', border: '0.5px solid var(--color-border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)' }}>
           <h3 className="text-[13px] font-semibold tracking-[0.08em] uppercase" style={{ color: 'var(--color-text-muted)' }}>Resilience</h3>
           <div className="flex-1 flex flex-col items-center justify-center py-6">
             <span className="resilience-num text-[56px] font-bold tracking-[-0.04em] leading-none tabular-nums" style={{ color: 'var(--color-cora)' }}>{metrics.autoResolutionProgress}</span>

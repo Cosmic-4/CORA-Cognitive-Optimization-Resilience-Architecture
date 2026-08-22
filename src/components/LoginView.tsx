@@ -75,59 +75,56 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
   const errorRef = useRef<HTMLParagraphElement>(null);
   const bgOrbRef = useRef<HTMLDivElement>(null);
 
-  // ── anime.js: full entrance timeline ──
+  // ── anime.js: full entrance timeline (ponytail: guarded, no hide if fails) ──
   useEffect(() => {
-    if (!rootRef.current) return;
-    const tl = createTimeline({ defaults: { ease: 'outExpo' } });
-    // left branding stagger
-    if (leftRef.current) {
-      tl.add(leftRef.current.querySelectorAll('.login-anim-left'), {
-        translateY: [22, 0],
-        opacity: [0, 1],
-        duration: 560,
-        delay: stagger(90),
-      });
-    }
-    // form fields stagger
-    if (formRef.current) {
-      tl.add(formRef.current.querySelectorAll('.login-anim-field'), {
-        translateY: [18, 0],
-        opacity: [0, 1],
-        duration: 460,
-        delay: stagger(70, { start: 100 }),
-      }, '-=320');
-      // demo cards
-      const cards = formRef.current.querySelectorAll('.login-demo-card');
-      tl.add(cards, {
-        translateY: [14, 0],
-        scale: [0.96, 1],
-        opacity: [0, 1],
-        duration: 420,
-        delay: stagger(90),
-      }, '-=200');
-    }
-    // bg orb floating
-    if (bgOrbRef.current) {
-      animate(bgOrbRef.current, {
-        translateY: [-12, 12],
-        scale: [1, 1.04, 1],
-        duration: 3800,
-        loop: true,
-        alternate: true,
-        ease: 'inOutSine',
-      });
-    }
-    // continuous shimmer on C logo
-    const logo = rootRef.current?.querySelector('.login-logo-c');
-    if (logo) {
-      animate(logo, {
-        rotate: [0, 3, -3, 0],
-        scale: [1, 1.05, 1],
-        duration: 4200,
-        loop: true,
-        ease: 'inOutSine',
-      });
-    }
+    try {
+      if (!rootRef.current) return;
+      const tl = createTimeline({ defaults: { ease: 'outExpo' } });
+      if (leftRef.current) {
+        tl.add(leftRef.current.querySelectorAll('.login-anim-left'), {
+          translateY: [22, 0],
+          opacity: [0, 1],
+          duration: 560,
+          delay: stagger(90),
+        });
+      }
+      if (formRef.current) {
+        tl.add(formRef.current.querySelectorAll('.login-anim-field'), {
+          translateY: [18, 0],
+          opacity: [0, 1],
+          duration: 460,
+          delay: stagger(70, { start: 100 }),
+        }, '-=320');
+        const cards = formRef.current.querySelectorAll('.login-demo-card');
+        tl.add(cards, {
+          translateY: [14, 0],
+          scale: [0.96, 1],
+          opacity: [0, 1],
+          duration: 420,
+          delay: stagger(90),
+        }, '-=200');
+      }
+      if (bgOrbRef.current) {
+        animate(bgOrbRef.current, {
+          translateY: [-12, 12],
+          scale: [1, 1.04, 1],
+          duration: 3800,
+          loop: true,
+          alternate: true,
+          ease: 'inOutSine',
+        });
+      }
+      const logo = rootRef.current?.querySelector('.login-logo-c');
+      if (logo) {
+        animate(logo, {
+          rotate: [0, 3, -3, 0],
+          scale: [1, 1.05, 1],
+          duration: 4200,
+          loop: true,
+          ease: 'inOutSine',
+        });
+      }
+    } catch {}
   }, []);
 
   // shake on error
@@ -214,23 +211,23 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-primary)]/60 via-transparent to-transparent pointer-events-none" />
         <div className="relative z-10 flex flex-col justify-end p-10 w-full">
           <BoxReveal boxColor="var(--color-cora)" duration={0.4}>
-            <div className="login-anim-left inline-flex items-center gap-2 mb-3 opacity-0">
+            <div className="login-anim-left inline-flex items-center gap-2 mb-3">
               <div className="login-logo-c w-8 h-8 rounded bg-[var(--color-cora)] flex items-center justify-center text-white font-bold text-sm">C</div>
               <span className="text-lg font-semibold tracking-tight">CORA</span>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-cora-muted)] text-[var(--color-cora)] border border-[var(--color-cora)]/20">v0.1.0</span>
             </div>
           </BoxReveal>
           <BoxReveal boxColor="var(--skeleton)" duration={0.4}>
-            <h1 className="login-anim-left text-2xl font-semibold leading-tight max-w-sm opacity-0">
+            <h1 className="login-anim-left text-2xl font-semibold leading-tight max-w-sm">
               Cognitive Optimization & Resilience Architecture
             </h1>
           </BoxReveal>
           <BoxReveal boxColor="var(--skeleton)" duration={0.4}>
-            <p className="login-anim-left text-sm text-[var(--color-text-secondary)] max-w-sm mt-2 opacity-0">
+            <p className="login-anim-left text-sm text-[var(--color-text-secondary)] max-w-sm mt-2">
               Self-healing data infrastructure — collectors, missions & mutations, auto-repaired in real time.
             </p>
           </BoxReveal>
-          <div className="login-anim-left flex items-center gap-2 mt-4 text-[10px] font-mono text-[var(--color-text-muted)] opacity-0">
+          <div className="login-anim-left flex items-center gap-2 mt-4 text-[10px] font-mono text-[var(--color-text-muted)]">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> System online • Mock mode • Bright Data ready
           </div>
         </div>
@@ -240,7 +237,7 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
       <div ref={formRef} className="flex-1 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-10 py-8 overflow-y-auto">
         <div className="w-full max-w-[380px]">
           {/* Mobile logo */}
-          <div className="login-anim-field lg:hidden flex items-center gap-2 mb-6 opacity-0">
+          <div className="login-anim-field lg:hidden flex items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded bg-[var(--color-cora)] flex items-center justify-center text-white font-bold text-sm">C</div>
             <span className="text-lg font-semibold tracking-tight">CORA</span>
             <span className="text-[10px] font-mono text-[var(--color-text-muted)] ml-auto">Cognitive Optimization & Resilience Architecture</span>
@@ -248,7 +245,7 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
 
           {/* Page toggle — "ADD OUR CUSTOM CREDENTIALS" above sample creds */}
           <BoxReveal boxColor="var(--skeleton)" duration={0.3}>
-            <div className="login-anim-field flex items-center justify-between mb-4 opacity-0">
+            <div className="login-anim-field flex items-center justify-between mb-4">
               <h2 className="text-[11px] font-mono font-semibold tracking-widest uppercase text-[var(--color-text-muted)]">
                 {mode === 'login' ? 'Sign in to CORA' : 'Create your credentials'}
               </h2>
@@ -260,7 +257,7 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
 
           {/* Custom credentials toggle — above sample creds, serves as the "page where we can add our custom credentials" */}
           <BoxReveal boxColor="var(--skeleton)" duration={0.3} width="100%">
-            <div className="login-anim-field flex p-1 rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] mb-5 opacity-0">
+            <div className="login-anim-field flex p-1 rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] mb-5">
               <button
                 type="button"
                 onClick={() => {
@@ -288,7 +285,7 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
           </BoxReveal>
 
           <BoxReveal boxColor="var(--skeleton)" duration={0.3} width="100%">
-            <p className="login-anim-field text-[11px] font-mono text-[var(--color-text-muted)] mb-4 leading-relaxed opacity-0">
+            <p className="login-anim-field text-[11px] font-mono text-[var(--color-text-muted)] mb-4 leading-relaxed">
               {mode === 'login'
                 ? 'Use your own username & password, or try a demo account below.'
                 : 'Register a new operator account — stored locally in CORA. You can use any username/password you choose.'}
@@ -296,7 +293,7 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
           </BoxReveal>
 
           {/* Form — uses modern Input + BoxReveal */}
-          <form onSubmit={handleSubmit} className="space-y-3 login-anim-field opacity-0">
+          <form onSubmit={handleSubmit} className="space-y-3 login-anim-field">
             {mode === 'register' && (
               <div className="flex flex-col gap-2 login-anim-field">
                 <BoxReveal boxColor="var(--skeleton)" duration={0.3}>
@@ -355,7 +352,7 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
 
           {/* Divider */}
           <BoxReveal width="100%" boxColor="var(--skeleton)" duration={0.3}>
-            <div className="login-anim-field flex items-center gap-3 my-6 opacity-0">
+            <div className="login-anim-field flex items-center gap-3 my-6">
               <div className="h-px flex-1 bg-[var(--color-border-subtle)]" />
               <span className="text-[10px] font-mono tracking-widest uppercase text-[var(--color-text-muted)]">or use sample credentials</span>
               <div className="h-px flex-1 bg-[var(--color-border-subtle)]" />
@@ -374,7 +371,7 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
                   onMouseEnter={(e) => animate(e.currentTarget, { scale: 1.015, duration: 180, ease: 'outQuad' })}
                   onMouseLeave={(e) => animate(e.currentTarget, { scale: 1, duration: 180, ease: 'outQuad' })}
                   disabled={!!autoLoginId || loading}
-                  className="login-demo-card text-left relative rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-secondary)] p-3 hover:border-[var(--color-cora)]/40 hover:bg-[var(--color-bg-tertiary)] transition-all group disabled:opacity-60 overflow-hidden opacity-0"
+                  className="login-demo-card text-left relative rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-secondary)] p-3 hover:border-[var(--color-cora)]/40 hover:bg-[var(--color-bg-tertiary)] transition-all group disabled:opacity-60 overflow-hidden"
                 >
                   <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--color-cora)]/0 to-transparent group-hover:via-[var(--color-cora)]/50 transition-all" />
                   <div className="flex items-center justify-between mb-1.5">
@@ -391,7 +388,7 @@ export function LoginView({ onLogin }: { onLogin: (user: { id: string; username:
                     <span className="text-[var(--color-text-muted)]">/</span>
                     <code className="px-1.5 py-0.5 rounded bg-[var(--color-bg-primary)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">{acc.password}</code>
                   </div>
-                  <p className="text-[9px] font-mono text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity mt-1.5">
+                  <p className="text-[9px] font-mono text-[var(--color-text-muted)] group-hover:opacity-100 transition-opacity mt-1.5">
                     {acc.label === 'Admin' ? 'Full access • collectors & mutations' : 'Demo • read-only exploration'}
                   </p>
                 </button>
