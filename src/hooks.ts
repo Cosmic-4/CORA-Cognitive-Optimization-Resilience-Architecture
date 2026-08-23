@@ -22,8 +22,10 @@ export function useTheme() {
 }
 
 // ─── API Client ────────────────────────────────────────────────────────
-// ponytail: keep 3000 as canonical backend; vite 5173 proxy fallback
-const API_BASE = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3000' : '';
+// ponytail: VITE_API_URL for hosted split (e.g. https://api.example.com), else same-origin, else 5173→3000 dev fallback
+const API_BASE =
+  (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') ||
+  (typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3000' : '');
 
 function safeGetToken(): string | null {
   try { return typeof window !== 'undefined' ? window.localStorage.getItem('cora-auth-token') : null; } catch { return null; }
@@ -104,6 +106,8 @@ export interface ApiRunResult {
   anomalies: any[];
   repair?: { mutation_id: string; repair_id: string; old_selector: string; new_selector: string; confidence: number } | null;
   collector: ApiCollector;
+  source?: string;
+  live?: boolean;
 }
 
 export function mapCollector(api: ApiCollector): CollectorNode {

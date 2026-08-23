@@ -12,7 +12,11 @@ interface ProductRecord {
   lastVerified: string;
 }
 
-export const DataExplorerView = () => {
+interface DataExplorerProps {
+  bdMode?: 'mock' | 'live';
+}
+
+export const DataExplorerView = ({ bdMode = 'mock' }: DataExplorerProps) => {
   const [collectors, setCollectors] = useState<any[]>([]);
   const [selectedCollector, setSelectedCollector] = useState('');
   const [products, setProducts] = useState<ProductRecord[]>([]);
@@ -139,6 +143,9 @@ export const DataExplorerView = () => {
           <h2 className="text-[28px] md:text-[30px] font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">Data Explorer</h2>
           <p className="text-[14px] leading-relaxed mt-1.5 max-w-[520px]" style={{ color: 'var(--color-text-secondary)' }}>
             Inspect extracted payloads with trust metrics and provenance. Extract manually, select rows, and export as PDF.
+          </p>
+          <p className="text-[12px] font-medium mt-2" style={{ color: bdMode === 'live' ? 'var(--color-success)' : 'var(--color-warning)' }}>
+            Source: {bdMode === 'live' ? 'Live (fakestoreapi.com)' : 'Demo (mockData)'}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

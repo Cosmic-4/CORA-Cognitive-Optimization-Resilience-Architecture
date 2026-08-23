@@ -85,9 +85,9 @@ export const Navigation = ({
             <span className="text-[10px] font-medium tracking-widest px-1.5 py-0.5 rounded-full bg-[var(--color-cora)] text-white">RESILIENCE</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${bdConnected ? 'bg-[var(--color-success)]' : 'bg-[var(--color-warning)]'} shadow-sm`} />
-        </div>
+        <span className={`text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full border ${bdConnected ? 'bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/20' : 'bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20'}`}>
+          {bdConnected ? 'LIVE' : 'MOCK'}
+        </span>
       </header>
 
       {mobileMenuOpen && (
@@ -140,15 +140,13 @@ export const Navigation = ({
         </div>
 
         <div className="mt-auto p-4 space-y-3" style={{ borderTop: '0.5px solid var(--color-border-subtle)' }}>
-          <div className="p-3 rounded-xl flex items-center justify-between"
-            style={{ background: 'var(--color-bg-secondary)', border: '0.5px solid var(--color-border-subtle)' }}>
+          <div className="p-3 rounded-xl"
+            style={{ background: bdConnected ? 'var(--color-success-muted)' : 'var(--color-warning-muted)', border: `0.5px solid ${bdConnected ? 'rgba(52,211,153,0.25)' : 'rgba(251,191,36,0.25)'}` }}>
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[14px] text-[var(--color-brightdata)]">cloud</span>
-              <span className="text-[11px] font-semibold tracking-[0.06em] text-[var(--color-text-primary)]">BRIGHT DATA</span>
+              <span className="material-symbols-outlined text-[14px]" style={{ color: bdConnected ? 'var(--color-success)' : 'var(--color-warning)' }}>{bdConnected ? 'cloud_done' : 'cloud_off'}</span>
+              <span className="text-[11px] font-bold tracking-wide" style={{ color: bdConnected ? 'var(--color-success)' : 'var(--color-warning)' }}>{bdConnected ? 'LIVE MODE' : 'DEMO MODE'}</span>
             </div>
-            <span className={`text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-full border ${bdConnected ? 'bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/20' : 'bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20'}`}>
-              {bdConnected ? 'LIVE' : 'MOCK'}
-            </span>
+            <p className="text-[10px] mt-1.5 leading-snug" style={{ color: bdConnected ? 'var(--color-success)' : 'var(--color-warning)', opacity: 0.8 }}>{bdConnected ? 'Fetching from fakestoreapi.com via Bright Data' : 'Using mock data'}</p>
           </div>
           <div className="flex items-center justify-between text-[11px] text-[var(--color-text-muted)]">
             <span className="font-mono">v0.2 • {systemHealth}% health</span>
@@ -164,8 +162,10 @@ export const Navigation = ({
         style={{ background: 'color-mix(in srgb, var(--color-bg-primary) 78%, transparent)', backdropFilter: 'blur(20px) saturate(1.2)', WebkitBackdropFilter: 'blur(20px) saturate(1.2)', borderBottom: '0.5px solid var(--color-border-subtle)' }}>
         <div className="flex items-center gap-5 text-[13px]">
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${bdConnected ? 'bg-[var(--color-success)] animate-pulse' : 'bg-[var(--color-warning)]'}`} />
-            <span className={`font-medium tracking-[-0.01em] ${bdConnected ? 'text-[var(--color-success)]' : 'text-[var(--color-warning)]'}`}>{bdMode === 'live' ? 'Engine Live' : 'Engine Mock'}</span>
+            <span className={`text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full border ${bdConnected ? 'bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/20 animate-pulse' : 'bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20'}`}>
+              {bdConnected ? 'LIVE' : 'MOCK'}
+            </span>
+            <span className={`text-[12px] tracking-[-0.01em] ${bdConnected ? 'text-[var(--color-success)]' : 'text-[var(--color-warning)]'}`}>{bdConnected ? 'Live — fetching via Bright Data fallback' : 'Demo — using mock data'}</span>
           </div>
           <span className="w-px h-4 bg-[var(--color-border-subtle)]" />
           <span className="text-[var(--color-text-secondary)]"><strong className="text-[var(--color-text-primary)] font-semibold">{collectorCount ?? 0}</strong> collectors</span>

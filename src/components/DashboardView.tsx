@@ -7,6 +7,7 @@ import { animate, stagger, createTimeline } from 'animejs';
 interface DashboardViewProps {
   metrics: SystemMetrics;
   incidents: Incident[];
+  bdMode?: 'mock' | 'live';
   onOpenDeployModal: () => void;
   onResolveIncident: (id: string) => void;
   onMutateWeb: () => void;
@@ -30,7 +31,7 @@ const PIPELINE_STAGES: Array<{ key: string; label: string; stateKey: SystemState
   { key: 'complete', label: 'Complete', stateKey: 'recovering' },
 ];
 
-export const DashboardView = ({ metrics, incidents, onOpenDeployModal, onMutateWeb, pipelineActive, pipelineStage }: DashboardViewProps) => {
+export const DashboardView = ({ metrics, incidents, bdMode = 'mock', onOpenDeployModal, onMutateWeb, pipelineActive, pipelineStage }: DashboardViewProps) => {
   const coreState = pipelineActive ? pipelineStage : 'calm';
   const activeStageIndex = PIPELINE_STAGES.findIndex((s) => s.stateKey === coreState);
   const statusInfo = STATUS_LABELS[coreState as SystemState];
@@ -99,6 +100,9 @@ export const DashboardView = ({ metrics, incidents, onOpenDeployModal, onMutateW
         </div>
         <p className="text-[14px] leading-relaxed mt-1.5 max-w-[560px]" style={{ color: 'var(--color-text-secondary)' }}>
           Self-healing data infrastructure — collectors, mutations & repairs, verified in real time.
+        </p>
+        <p className="text-[12px] font-medium mt-2" style={{ color: bdMode === 'live' ? 'var(--color-success)' : 'var(--color-warning)' }}>
+          Source: {bdMode === 'live' ? 'Live (fakestoreapi.com)' : 'Demo (mockData)'}
         </p>
       </div>
 

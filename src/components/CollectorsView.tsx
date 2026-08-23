@@ -210,10 +210,13 @@ export const CollectorsView = ({ collectors, onToggleActive, onAddCollector, onU
                 </button>
               </div>
 
-              {/* Run Result */}
+              {/* Run Result — clearly labels LIVE vs MOCK vs DEMO + genuine vs simulated healing */}
               {runResult && (
                 <div className="p-3 rounded glass-light space-y-2">
-                  <h4 className="text-[8px] font-mono text-[var(--color-text-muted)] uppercase tracking-[0.15em] font-medium">Last Run Result</h4>
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-[8px] font-mono text-[var(--color-text-muted)] uppercase tracking-[0.15em] font-medium">Last Run Result</h4>
+                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-mono font-bold border ${runResult.source?.startsWith('live') || runResult.live ? 'bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]' : runResult.source === 'mock' ? 'bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]' : 'bg-[var(--color-cora-muted)] text-[var(--color-cora)] border-[var(--color-cora)]'}`}>{runResult.source?.toUpperCase() || (runResult.live ? 'LIVE' : 'MOCK')} {runResult.live ? '• real API' : runResult.source === 'demo' ? '• simulated' : '• preloaded'}</span>
+                  </div>
                   <div className="grid grid-cols-3 gap-1.5 text-[9px] font-mono">
                     <div className="p-1.5 rounded border" style={{ borderColor: 'var(--color-success)', backgroundColor: 'var(--color-success-muted)' }}>
                       <div className="text-[8px] text-[var(--color-text-muted)]">RECORDS</div>
@@ -228,11 +231,17 @@ export const CollectorsView = ({ collectors, onToggleActive, onAddCollector, onU
                       <div className="text-[11px] font-medium" style={{ color: 'var(--color-cora)' }}>{((runResult.validation?.confidence || 0) * 100).toFixed(1)}%</div>
                     </div>
                   </div>
-                  {runResult.repair && (
-                    <div className="text-[9px] font-mono p-1.5 rounded border" style={{ borderColor: 'var(--color-success)', backgroundColor: 'var(--color-success-muted)', color: 'var(--color-success)' }}>
-                      Self-healed: {runResult.repair.old_selector} → {runResult.repair.new_selector}
+                  {runResult.anomalies?.length > 0 && (
+                    <div className="text-[9px] font-mono p-1.5 rounded border" style={{ borderColor: 'var(--color-warning)', backgroundColor: 'var(--color-warning-muted)', color: 'var(--color-warning)' }}>
+                      Genuine anomaly: {runResult.anomalies[0]?.type} on {runResult.anomalies[0]?.field || 'field'} — {runResult.anomalies[0]?.reason?.slice(0,80)}
                     </div>
                   )}
+                  {runResult.repair && (
+                    <div className="text-[9px] font-mono p-1.5 rounded border" style={{ borderColor: 'var(--color-success)', backgroundColor: 'var(--color-success-muted)', color: 'var(--color-success)' }}>
+                      Self-healed (genuine): {runResult.repair.old_selector} → {runResult.repair.new_selector}
+                    </div>
+                  )}
+                  {runResult.source?.startsWith('live') && <div className="text-[8px] font-mono text-[var(--color-text-muted)]">Live structured data via CORA backend → validated → persisted. Demo mutations are separate (Mutation Centre / Mutate Web button).</div>}
                 </div>
               )}
             </div>

@@ -259,6 +259,7 @@ function AppInner() {
           <DashboardView
             metrics={metrics}
             incidents={incidents}
+            bdMode={bdMode}
             onOpenDeployModal={() => setDeployModalOpen(true)}
             onResolveIncident={(id) =>
               setIncidents((prev) =>
@@ -287,7 +288,7 @@ function AppInner() {
         {activeTab === 'memory' && <MemoryView />}
         {activeTab === 'ai-chat' && <AIChatView />}
         {activeTab === 'terminal' && <LiveTerminalView />}
-        {activeTab === 'data-explorer' && <DataExplorerView />}
+        {activeTab === 'data-explorer' && <DataExplorerView bdMode={bdMode} />}
       </main>
 
       <DeployRepairModal
